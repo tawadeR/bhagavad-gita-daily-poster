@@ -14,7 +14,7 @@ quotes = [
     "Set your heart upon your work, but never on its reward. – Bhagavad Gita 2.47",
 ]
 
-# Pick random quote
+# Pick a random quote
 quote = random.choice(quotes)
 print(f"Selected quote:\n{quote}")
 
@@ -24,13 +24,12 @@ print(f"Selected quote:\n{quote}")
 img = Image.new("RGB", (1080, 1080), color=(255, 250, 240))
 draw = ImageDraw.Draw(img)
 
-# Load font
 try:
     font = ImageFont.truetype("DejaVuSans.ttf", 40)
 except:
     font = ImageFont.load_default()
 
-# Word wrap
+# Word wrap helper
 def wrap_text(text, font, max_width):
     words = text.split(" ")
     lines, current = [], ""
@@ -55,11 +54,22 @@ for line in lines:
     draw.text(((1080 - w) / 2, y), line, fill="black", font=font)
     y += bbox[3] - bbox[1] + 10
 
+# Save image locally
 img.save("post.jpg")
 print("✅ Image generated successfully.")
 
 # --------------------------
-# 3️⃣  POST TO INSTAGRAM
+# 3️⃣  BUILD RAW GITHUB URL
+# --------------------------
+GITHUB_USER = "tawadeR"
+REPO_NAME = "bhagavad-gita-daily-poster"
+BRANCH = "main"
+
+image_url = f"https://raw.githubusercontent.com/{GITHUB_USER}/{REPO_NAME}/{BRANCH}/post.jpg"
+print(f"Using image URL: {image_url}")
+
+# --------------------------
+# 4️⃣  POST TO INSTAGRAM
 # --------------------------
 ACCESS_TOKEN = os.getenv("IG_ACCESS_TOKEN")
 IG_USER_ID = os.getenv("IG_USER_ID")
@@ -67,12 +77,11 @@ IG_USER_ID = os.getenv("IG_USER_ID")
 if not ACCESS_TOKEN or not IG_USER_ID:
     raise ValueError("❌ Missing environment variables: IG_ACCESS_TOKEN or IG_USER_ID.")
 
-# STEP 1: Upload media container
+# Step 1: Upload media container (use image_url)
 upload_url = f"https://graph.facebook.com/v19.0/{IG_USER_ID}/media"
-files = {"image_file": open("post.jpg", "rb")}
-payload = {"caption": quote, "access_token": ACCESS_TOKEN}
+payload = {"image_url": image_url, "caption": quote, "access_token": ACCESS_TOKEN}
 
-upload_response = requests.post(upload_url, files=files, data=payload)
+upload_response = requests.post(upload_url, data=payload)
 upload_result = upload_response.json()
 print("Upload response:", upload_result)
 
@@ -81,7 +90,7 @@ if "id" not in upload_result:
 
 creation_id = upload_result["id"]
 
-# STEP 2: Publish container
+# Step 2: Publish container
 publish_url = f"https://graph.facebook.com/v19.0/{IG_USER_ID}/media_publish"
 publish_response = requests.post(publish_url, data={"creation_id": creation_id, "access_token": ACCESS_TOKEN})
 publish_result = publish_response.json()
