@@ -28,10 +28,11 @@ jobs:
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
         run: python main.py
 
-      - name: Commit and push new image
+           - name: Commit and push new image
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add post.jpg
-          git commit -m "🪔 Auto-update daily Bhagavad Gita image $(date)"
+          git add post_*.jpg
+          git commit -m "🪔 Auto-upload new daily image $(date)" || echo "No changes to commit"
           git push
+
