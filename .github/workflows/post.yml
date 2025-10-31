@@ -2,12 +2,14 @@ name: Daily Gita Post
 
 on:
   schedule:
-    - cron: "0 2 * * *"  # every day at 2 AM UTC (7:30 AM IST)
-  workflow_dispatch:
+    - cron: "0 2 * * *"  # Every day at 2 AM UTC (7:30 AM IST)
+  workflow_dispatch:      # Manual trigger allowed
 
 jobs:
   post:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write    # Needed to push new image to repo
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -20,8 +22,16 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run script
+      - name: Generate new post image
         env:
           IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
         run: python main.py
+
+      - name: Commit and push new image
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add post.jpg
+          git commit -m "🪔 Auto-update daily Bhagavad Gita image $(date)"
+          git push
