@@ -1,6 +1,7 @@
 import os
 import random
 import requests
+from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 
 # --------------------------
@@ -14,9 +15,13 @@ quotes = [
     "Set your heart upon your work, but never on its reward. – Bhagavad Gita 2.47",
 ]
 
-# Pick a random quote
+# Pick random quote
 quote = random.choice(quotes)
 print(f"Selected quote:\n{quote}")
+
+# Create unique file name based on date
+today = datetime.now().strftime("%Y-%m-%d")
+filename = f"post_{today}.jpg"
 
 # --------------------------
 # 2️⃣  GENERATE IMAGE
@@ -29,7 +34,6 @@ try:
 except:
     font = ImageFont.load_default()
 
-# Word wrap helper
 def wrap_text(text, font, max_width):
     words = text.split(" ")
     lines, current = [], ""
@@ -54,9 +58,9 @@ for line in lines:
     draw.text(((1080 - w) / 2, y), line, fill="black", font=font)
     y += bbox[3] - bbox[1] + 10
 
-# Save image locally
-img.save("post.jpg")
-print("✅ Image generated successfully.")
+# Save image with date
+img.save(filename)
+print(f"✅ Image generated successfully: {filename}")
 
 # --------------------------
 # 3️⃣  BUILD RAW GITHUB URL
@@ -65,7 +69,7 @@ GITHUB_USER = "tawadeR"
 REPO_NAME = "bhagavad-gita-daily-poster"
 BRANCH = "main"
 
-image_url = f"https://raw.githubusercontent.com/{GITHUB_USER}/{REPO_NAME}/{BRANCH}/post.jpg"
+image_url = f"https://raw.githubusercontent.com/{GITHUB_USER}/{REPO_NAME}/{BRANCH}/{filename}"
 print(f"Using image URL: {image_url}")
 
 # --------------------------
@@ -77,7 +81,6 @@ IG_USER_ID = os.getenv("IG_USER_ID")
 if not ACCESS_TOKEN or not IG_USER_ID:
     raise ValueError("❌ Missing environment variables: IG_ACCESS_TOKEN or IG_USER_ID.")
 
-# Step 1: Upload media container (use image_url)
 upload_url = f"https://graph.facebook.com/v19.0/{IG_USER_ID}/media"
 payload = {"image_url": image_url, "caption": quote, "access_token": ACCESS_TOKEN}
 
@@ -90,7 +93,6 @@ if "id" not in upload_result:
 
 creation_id = upload_result["id"]
 
-# Step 2: Publish container
 publish_url = f"https://graph.facebook.com/v19.0/{IG_USER_ID}/media_publish"
 publish_response = requests.post(publish_url, data={"creation_id": creation_id, "access_token": ACCESS_TOKEN})
 publish_result = publish_response.json()
